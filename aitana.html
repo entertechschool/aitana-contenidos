@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ai.tana — Asistente de Contenido</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sauce+One:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040410;
+  --card:rgba(255,255,255,0.06);
+  --card-h:rgba(255,255,255,0.10);
+  --border:rgba(255,255,255,0.08);
+  --border-s:rgba(255,255,255,0.18);
+  --text:#f2f0ff;
+  --t2:rgba(242,240,255,0.70);
+  --t3:rgba(242,240,255,0.38);
+  --purple:#9B5FFF;
+  --p2:#6B2FEF;
+  --orange:#FF914D;
+  --pink:#FF3295;
+  --cyan:#05D3AA;
+  --blue:#5DE0E6;
+  --green:#34C47C;
+  --amber:#F0A020;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Open Sauce One',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── ATM — turquoise/cyan team ── */
+.atm{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.atm::before{content:'';position:absolute;top:-15%;left:-5%;width:700px;height:700px;background:radial-gradient(ellipse,rgba(5,211,170,0.20) 0%,transparent 60%);animation:d1 18s ease-in-out infinite alternate;}
+.atm::after{content:'';position:absolute;bottom:-15%;right:-5%;width:600px;height:600px;background:radial-gradient(ellipse,rgba(93,224,230,0.14) 0%,transparent 60%);animation:d2 23s ease-in-out infinite alternate;}
+.atm-mid{position:fixed;top:25%;left:55%;width:500px;height:500px;background:radial-gradient(ellipse,rgba(5,211,170,0.09) 0%,transparent 65%);pointer-events:none;z-index:0;animation:d3 28s ease-in-out infinite alternate;}
+@keyframes d1{to{transform:translate(80px,70px) scale(1.08)}}
+@keyframes d2{to{transform:translate(-70px,-60px) scale(1.1)}}
+@keyframes d3{to{transform:translate(-50px,80px)}}
+.dots{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 80% 70% at 50% 20%,black 0%,transparent 100%);}
+
+/* ── SCANLINE subtle ── */
+.scanline{position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+
+/* ── LAYOUT ── */
+.page{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:0 28px 100px;}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0 0;margin-bottom:56px;}
+.nav-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:100px;background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid var(--border-s);font-size:13px;font-weight:700;color:var(--t2);text-decoration:none;transition:all .2s;}
+.nav-back:hover{background:rgba(255,255,255,0.10);color:var(--text);}
+.nav-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;background:rgba(5,211,170,0.10);border:1px solid rgba(5,211,170,0.30);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pdot 2s ease-in-out infinite;}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(5,211,170,0.6)}50%{box-shadow:0 0 0 6px rgba(5,211,170,0)}}
+
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:20px;padding-top:8px;}
+.hero-eye{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin-bottom:24px;}
+
+/* Título ai.tana + avatar en línea */
+.ai-row{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:10px;}
+.ai-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(5,211,170,0.25),rgba(93,224,230,0.15));border:2px solid rgba(5,211,170,0.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 32px rgba(5,211,170,0.25),0 0 64px rgba(5,211,170,0.10);animation:avatarglow 4s ease-in-out infinite alternate;}
+@keyframes avatarglow{from{box-shadow:0 0 24px rgba(5,211,170,0.25),0 0 48px rgba(5,211,170,0.08)}to{box-shadow:0 0 40px rgba(5,211,170,0.45),0 0 80px rgba(5,211,170,0.18)}}
+.ai-name-block{text-align:center;}
+.ai-wordmark{font-size:72px;font-weight:700;line-height:0.95;letter-spacing:-4px;background:linear-gradient(135deg,#7fffd4 0%,var(--cyan) 30%,var(--blue) 60%,#c4a0ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;text-align:center;}
+.ai-sub{font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--t3);margin-top:5px;display:block;text-align:center;}
+
+.hero p{font-size:18px;font-weight:300;color:var(--t2);max-width:520px;margin:18px auto 32px;line-height:1.75;}
+
+/* Paso a paso del mes — reemplaza XP bar */
+.month-steps{display:flex;gap:0;align-items:center;justify-content:center;max-width:600px;margin:0 auto 36px;flex-wrap:wrap;gap:4px;}
+.ms-step{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ms-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1.5px solid;transition:all .3s;cursor:pointer;}
+.ms-dot.done{background:rgba(5,211,170,0.20);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px rgba(5,211,170,0.30);}
+.ms-dot.active{background:rgba(5,211,170,0.12);border-color:rgba(5,211,170,0.50);color:var(--cyan);animation:dotpulse 1.5s ease-in-out infinite;}
+.ms-dot.idle{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12);color:var(--t3);}
+@keyframes dotpulse{0%,100%{box-shadow:0 0 0 0 rgba(5,211,170,0.4)}50%{box-shadow:0 0 0 6px rgba(5,211,170,0)}}
+.ms-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);}
+.ms-line{width:28px;height:1.5px;background:rgba(255,255,255,0.10);margin-bottom:16px;flex-shrink:0;}
+.ms-line.done{background:var(--cyan);opacity:0.4;}
+
+/* ── HERO BTNS ── */
+.hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:64px;}
+.btn-p{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#007a65);font-size:14px;font-weight:700;color:#fff;text-decoration:none;box-shadow:0 0 32px rgba(5,211,170,0.40),0 2px 0 rgba(255,255,255,0.1) inset;transition:all .2s;border:none;cursor:pointer;}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 48px rgba(5,211,170,0.55);}
+.btn-g{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:100px;background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid var(--border-s);font-size:14px;font-weight:700;color:var(--t2);text-decoration:none;transition:all .2s;cursor:pointer;}
+.btn-g:hover{background:rgba(255,255,255,0.12);color:var(--text);transform:translateY(-1px);}
+
+/* ── QUICK TOOLS ── */
+.quick-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:72px;}
+.qtool{display:flex;flex-direction:column;gap:10px;background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px 18px;text-decoration:none;transition:all .25s;cursor:pointer;position:relative;}
+.qtool:hover{transform:translateY(-4px);background:rgba(255,255,255,0.11);}
+.qtool.q-orange:hover{border-color:rgba(255,145,77,0.55);box-shadow:0 12px 40px rgba(255,145,77,0.20);}
+.qtool.q-purple:hover{border-color:rgba(155,95,255,0.55);box-shadow:0 12px 40px rgba(155,95,255,0.20);}
+.qtool.q-pink:hover{border-color:rgba(255,50,149,0.55);box-shadow:0 12px 40px rgba(255,50,149,0.20);}
+.qtool.q-cyan:hover{border-color:rgba(5,211,170,0.55);box-shadow:0 12px 40px rgba(5,211,170,0.20);}
+.q-icon{font-size:24px;}
+.q-title{font-size:15px;font-weight:700;color:var(--text);}
+.q-desc{font-size:13px;font-weight:300;color:var(--t2);line-height:1.55;flex:1;}
+.q-link{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-top:2px;}
+
+/* ── SECTION ── */
+.section{margin-bottom:80px;}
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sec-num{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.sec-head h2{font-size:24px;font-weight:700;letter-spacing:-.5px;}
+.sec-tag{margin-left:auto;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;border:1px solid;white-space:nowrap;}
+
+/* ── GLASS CARD ── */
+.gc{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.13);border-radius:20px;padding:28px;margin-bottom:14px;box-shadow:0 4px 24px rgba(0,0,0,0.3);}
+.gc p{font-size:18px;font-weight:300;color:var(--t2);line-height:1.75;}
+.gc.ap{border-color:rgba(155,95,255,0.28);background:rgba(155,95,255,0.06);}
+.gc.ao{border-color:rgba(255,145,77,0.28);background:rgba(255,145,77,0.04);}
+
+/* ── NOTE / WARN ── */
+.note{background:rgba(155,95,255,0.08);border-left:3px solid var(--purple);border-radius:0 14px 14px 0;padding:14px 20px;margin:16px 0;font-size:17px;font-weight:300;color:var(--t2);line-height:1.75;}
+.note strong{color:var(--text);font-weight:700;}
+.warn{background:rgba(255,145,77,0.08);border-left:3px solid var(--orange);border-radius:0 14px 14px 0;padding:14px 20px;margin:16px 0;font-size:17px;font-weight:300;color:var(--t2);line-height:1.75;}
+.warn strong{color:var(--orange);font-weight:700;}
+
+/* ── PROMPT BOX ── */
+.prompt-wrap{margin:20px 0;}
+.prompt-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.prompt-ey{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t3);}
+.copy-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;border-radius:100px;
+  background:linear-gradient(135deg,rgba(5,211,170,0.20),rgba(0,122,101,0.20));
+  border:1px solid rgba(5,211,170,0.45);
+  font-size:12px;font-weight:700;color:#7fffd4;
+  cursor:pointer;transition:all .2s;
+  font-family:'Open Sauce One',sans-serif;
+  box-shadow:0 0 12px rgba(5,211,170,0.15);
+}
+.copy-btn:hover{background:linear-gradient(135deg,rgba(5,211,170,0.35),rgba(0,122,101,0.35));color:#fff;box-shadow:0 0 20px rgba(5,211,170,0.35);transform:translateY(-1px);}
+.pbox{background:rgba(0,0,0,0.5);border:1px solid var(--border-s);border-radius:16px;padding:22px 24px;backdrop-filter:blur(10px);}
+.pbox pre{font-size:15px;font-weight:300;color:var(--t2);line-height:1.85;white-space:pre-wrap;font-family:'Open Sauce One',sans-serif;}
+.pbox pre em{color:#c4a0ff;font-style:normal;font-weight:400;}
+
+/* ── HORIZONTAL STEPS ── */
+.scroll-hint{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.hsteps{display:flex;gap:0;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(155,95,255,0.3) transparent;}
+.hstep{
+  flex-shrink:0;width:240px;scroll-snap-align:start;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:18px;padding:22px 20px;margin-right:12px;
+  display:flex;flex-direction:column;gap:12px;
+  transition:all .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,0.25);
+}
+.hstep:hover{background:rgba(255,255,255,0.13);border-color:rgba(255,255,255,0.25);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.35);}
+.hstep-n{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.hstep-title{font-size:15px;font-weight:700;line-height:1.35;}
+.hstep-desc{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65;flex:1;}
+.hstep-tip{font-size:12px;font-weight:300;color:var(--t3);padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-style:italic;line-height:1.55;}
+
+/* ── KBD ── */
+kbd{display:inline-flex;align-items:center;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;font-family:monospace;color:var(--text);}
+
+/* ── TOKENS ── */
+.tok-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.tok-do{background:rgba(52,196,124,0.08);border:1px solid rgba(52,196,124,0.25);border-radius:16px;padding:22px;}
+.tok-dont{background:rgba(255,107,74,0.08);border:1px solid rgba(255,107,74,0.25);border-radius:16px;padding:22px;}
+.tok-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
+.tok-do .tok-lbl{color:var(--green);}
+.tok-dont .tok-lbl{color:#FF6B4A;}
+.tok-do ul,.tok-dont ul{padding-left:18px;}
+.tok-do li,.tok-dont li{font-size:16px;font-weight:300;color:var(--t2);line-height:1.65;margin-bottom:8px;}
+.tip-list{display:flex;flex-direction:column;gap:10px;}
+.tip-item{display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;}
+.tip-dot{width:28px;height:28px;border-radius:9px;background:rgba(155,95,255,0.20);color:#c4a0ff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.tip-text{font-size:16px;font-weight:300;color:var(--t2);line-height:1.65;}
+.tip-text strong{color:var(--text);font-weight:700;}
+
+/* ── COLOR TABLE ── */
+.ctable{width:100%;border-collapse:collapse;margin-top:16px;}
+.ctable th{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);text-align:left;padding:9px 14px;border-bottom:1px solid var(--border);}
+.ctable td{font-size:16px;font-weight:300;color:var(--t2);padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.sw{width:20px;height:20px;border-radius:6px;display:inline-block;vertical-align:middle;margin-right:10px;}
+
+/* ── PROMPT REF ── */
+.pref-list{display:flex;flex-direction:column;gap:10px;}
+.pref{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:16px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.2);}
+.pref:hover{background:rgba(255,255,255,0.11);border-color:rgba(255,255,255,0.20);}
+.pref-tag{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.pref-text{font-size:15px;font-weight:300;color:var(--t3);}
+
+/* ── FLOW ── */
+.flow-wrap{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:22px;padding:40px 28px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
+.flow-phase{margin-bottom:32px;}
+.phase-lbl{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--t3);text-align:center;margin-bottom:20px;}
+.flow-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.fnode{border-radius:14px;padding:14px 18px;text-align:center;min-width:140px;max-width:190px;}
+.fn-t{font-size:14px;font-weight:700;line-height:1.3;}
+.fn-s{font-size:12px;font-weight:300;color:var(--t3);margin-top:4px;line-height:1.4;}
+.farrow{text-align:center;font-size:22px;color:var(--t3);margin:8px 0;}
+.flow-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.fcol-head{border-radius:12px;padding:12px 16px;text-align:center;margin-bottom:10px;}
+.fch-t{font-size:14px;font-weight:700;}
+.fstep{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:300;color:var(--t2);line-height:1.5;text-align:center;}
+.fstep strong{color:var(--text);font-weight:700;display:block;font-size:13px;margin-bottom:2px;}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px 0 0;border-top:1px solid var(--border);}
+footer p{font-size:14px;font-weight:300;color:var(--t3);}
+footer a{color:var(--purple);text-decoration:none;}
+
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(155,95,255,0.95),rgba(107,47,239,0.95));color:#fff;padding:10px 24px;border-radius:100px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(20px);opacity:0;border:1px solid rgba(255,255,255,0.2);}
+
+@media(max-width:720px){
+  .ai-name{font-size:56px;}
+  .quick-tools{grid-template-columns:1fr 1fr;}
+  .tok-grid{grid-template-columns:1fr;}
+  .flow-cols{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="atm"></div>
+<div class="atm-mid"></div>
+<div class="dots"></div>
+<div class="scanline"></div>
+<div id="toast"></div>
+
+<div class="page">
+
+<!-- NAV -->
+<nav>
+  <a href="https://enter-recursos.vercel.app/index.html" class="nav-back">← Volver a Enter Recursos</a>
+  <div class="nav-badge"><div class="pulse"></div>Content HQ</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">✳ Enter Tech School · Marketing</div>
+
+  <!-- Avatar centrado arriba -->
+  <div style="display:flex;justify-content:center;margin-bottom:16px;">
+    <div class="ai-avatar">
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- cabello largo -->
+        <path d="M10 15 Q9 26 10 32 Q11 36 14 36" stroke="#05D3AA" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M32 15 Q33 26 32 32 Q31 36 28 36" stroke="#05D3AA" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M12 10 Q14 5 21 4.5 Q28 5 30 10" stroke="#5DE0E6" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <!-- cabeza -->
+        <circle cx="21" cy="15" r="8.5" fill="rgba(5,211,170,0.10)" stroke="#05D3AA" stroke-width="1.5"/>
+        <!-- ojos femeninos -->
+        <ellipse cx="17.5" cy="14.5" rx="1.8" ry="2" fill="#05D3AA"/>
+        <ellipse cx="24.5" cy="14.5" rx="1.8" ry="2" fill="#05D3AA"/>
+        <ellipse cx="17.5" cy="14.5" rx="0.9" ry="1" fill="rgba(0,0,0,0.4)"/>
+        <ellipse cx="24.5" cy="14.5" rx="0.9" ry="1" fill="rgba(0,0,0,0.4)"/>
+        <!-- brillo ojos -->
+        <circle cx="18.2" cy="13.7" r="0.5" fill="white"/>
+        <circle cx="25.2" cy="13.7" r="0.5" fill="white"/>
+        <!-- pestañas -->
+        <path d="M15.5 12.5 L15 11.5" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M17 12 L17 11" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M22.5 12.5 L22 11.5" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M24 12 L24 11" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M26.5 12.5 L27 11.5" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round"/>
+        <!-- sonrisa femenina -->
+        <path d="M17.5 18 Q21 21.5 24.5 18" stroke="#05D3AA" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        <!-- cuello -->
+        <line x1="21" y1="23.5" x2="21" y2="26" stroke="#05D3AA" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- cuerpo / blusa -->
+        <path d="M13 26 Q13 38 21 38 Q29 38 29 26 Q27 24 21 24 Q15 24 13 26Z" fill="rgba(5,211,170,0.10)" stroke="#05D3AA" stroke-width="1.3"/>
+        <!-- brazos -->
+        <path d="M13 27 Q9 30 8 34" stroke="#05D3AA" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M29 27 Q33 30 34 34" stroke="#05D3AA" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <!-- detalle collar -->
+        <circle cx="21" cy="27" r="1.2" fill="rgba(93,224,230,0.6)" stroke="#5DE0E6" stroke-width="0.8"/>
+        <!-- señal wifi / IA en la frente -->
+        <path d="M19 8 Q21 6.5 23 8" stroke="#5DE0E6" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7"/>
+        <path d="M17.5 9.5 Q21 7 24.5 9.5" stroke="#5DE0E6" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nombre centrado debajo del avatar -->
+  <div class="ai-name-block" style="text-align:center;">
+    <span class="ai-wordmark">ai.tana</span>
+    <span class="ai-sub" style="text-align:center;">Asistente de Contenido</span>
+  </div>
+
+  <p>Tu base de operaciones para producir todo el contenido del mes. Prompts listos, flujo claro, herramientas a un clic.</p>
+</div>
+
+<!-- STEPS VISUALES DEL MES -->
+<div class="month-steps">
+  <div class="ms-step">
+    <div class="ms-dot done">✓</div>
+    <div class="ms-lbl">Grilla</div>
+  </div>
+  <div class="ms-line done"></div>
+  <div class="ms-step">
+    <div class="ms-dot active">2</div>
+    <div class="ms-lbl">Producir</div>
+  </div>
+  <div class="ms-line"></div>
+  <div class="ms-step">
+    <div class="ms-dot idle">3</div>
+    <div class="ms-lbl">Copies</div>
+  </div>
+  <div class="ms-line"></div>
+  <div class="ms-step">
+    <div class="ms-dot idle">4</div>
+    <div class="ms-lbl">Publicar</div>
+  </div>
+</div>
+
+<!-- BTNS -->
+<div class="hero-btns">
+  <a href="https://html.onlineviewer.net/" target="_blank" class="btn-p">🖥️ HTML Viewer</a>
+  <a href="https://shots.so/" target="_blank" class="btn-g">✨ Shots.so</a>
+  <a href="https://www.canva.com/design/DAG9fXo99B4/Jf2em9PXHMDLfFmVwy9EXw/edit" target="_blank" class="btn-g">🎨 Ejemplos Canva</a>
+  <a href="#seccion-flujo" class="btn-g">Ver flujo ↓</a>
+</div>
+
+<!-- QUICK TOOLS -->
+<div class="quick-tools">
+  <a href="https://html.onlineviewer.net/" target="_blank" class="qtool q-orange">
+    <div class="q-icon">🖥️</div>
+    <div class="q-title">HTML Viewer</div>
+    <div class="q-desc">Pega el código de Claude aquí y lo ves en segundos.</div>
+    <div class="q-link">html.onlineviewer.net ↗</div>
+  </a>
+  <a href="https://shots.so/" target="_blank" class="qtool q-purple">
+    <div class="q-icon">✨</div>
+    <div class="q-title">Shots.so</div>
+    <div class="q-desc">Fondos techie por color de programa para tus capturas.</div>
+    <div class="q-link">shots.so ↗</div>
+  </a>
+  <a href="https://www.canva.com/design/DAG9fXo99B4/Jf2em9PXHMDLfFmVwy9EXw/edit" target="_blank" class="qtool q-pink">
+    <div class="q-icon">🎨</div>
+    <div class="q-title">Templates Canva</div>
+    <div class="q-desc">Carpeta con todos los ejemplos y templates aprobados.</div>
+    <div class="q-link">Marketing Asset Hub ↗</div>
+  </a>
+  <a href="#seccion-flujo" class="qtool q-cyan">
+    <div class="q-icon">🗺️</div>
+    <div class="q-title">Ver el flujo</div>
+    <div class="q-desc">El mapa completo del proceso mensual de producción.</div>
+    <div class="q-link">Ir al flujo ↓</div>
+  </a>
+</div>
+
+<!-- ══ GRILLA ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(155,95,255,0.18);color:var(--purple);">1</div>
+    <h2>Grilla mensual</h2>
+    <span class="sec-tag" style="background:rgba(155,95,255,0.10);border-color:rgba(155,95,255,0.30);color:var(--purple);">Inicio de mes</span>
+  </div>
+  <div class="gc ap">
+    <p>Antes de producir cualquier pieza, planificas el mes completo. Pegas la estrategia del mes junto al prompt y Claude genera todas las ideas. Tú curadas, ajustas y cargas en ClickUp.</p>
+    <div class="warn" style="margin-top:16px;margin-bottom:0"><strong>Importante:</strong> Siempre pega la estrategia del mes al inicio del prompt — sin eso Claude no puede personalizar las ideas.</div>
+  </div>
+  <div class="prompt-wrap">
+    <div class="prompt-hd">
+      <div class="prompt-ey">Prompt — Grilla mensual</div>
+      <button class="copy-btn" onclick="copyId('pg')">📋 Copiar prompt</button>
+    </div>
+    <div class="pbox" id="pg"><pre>[Pega aquí la estrategia del mes antes de enviar]
+
+Necesito la grilla de contenido para <em>[mes]</em> de Enter Tech School.
+
+Formatos: carruseles educativos, reels, flyers de pauta.
+Frecuencia: 4-5 posts semanales.
+Balance: 70% educativo / 30% conversión.
+
+Para cada pieza dame:
+- Tipo de formato
+- Programa o tema
+- Título o ángulo propuesto
+- Objetivo (awareness / educación / conversión)
+- Fecha sugerida
+
+Nada genérico. Cada pieza debe sentirse 100% Enter.</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CARRUSELES ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(93,224,230,0.18);color:var(--blue);">2A</div>
+    <h2>Carruseles educativos</h2>
+    <span class="sec-tag" style="background:rgba(93,224,230,0.10);border-color:rgba(93,224,230,0.30);color:var(--blue);">HTML → editar → capturar → Shots → Canva</span>
+  </div>
+  <div class="prompt-wrap">
+    <div class="prompt-hd">
+      <div class="prompt-ey">Prompt — Carrusel educativo</div>
+      <button class="copy-btn" onclick="copyId('pc')">📋 Copiar prompt</button>
+    </div>
+    <div class="pbox" id="pc"><pre>Crea un carrusel educativo para Instagram de Enter Tech School.
+
+Tema: <em>[qué vas a enseñar]</em>
+Programa: <em>[Desarrollo Web / Análisis de Datos / Ciberseguridad / Soluciones con IA / Enter general]</em>
+Objetivo: <em>[awareness / educación / conversión]</em>
+Slides: <em>[un número, o escribe "a tu criterio"]</em>
+Ángulo (opcional): <em>[idea o frase de partida]</em>
+
+Entrégalo como archivo HTML con el sistema de diseño Enter.</pre>
+    </div>
+  </div>
+  <div class="scroll-hint">↔ Desliza para ver los pasos en orden</div>
+  <div class="hsteps">
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">1</div>
+      <div class="hstep-title">Claude entrega el código HTML</div>
+      <div class="hstep-desc">Cuando Claude termina, verás un bloque de código. En la esquina de ese bloque hay un botón que dice <strong>Copiar</strong>. Presiónalo — el código se copia solo.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">2</div>
+      <div class="hstep-title">Pega en el HTML Viewer</div>
+      <div class="hstep-desc">Ve a <strong>html.onlineviewer.net</strong>. Pega el código en el cuadro de texto y presiona "Preview". Verás todos los slides del carrusel.</div>
+      <div class="hstep-tip">Usa la vista amplia para ver cada slide en su tamaño real.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">3</div>
+      <div class="hstep-title">Revisar hasta que esté perfecto</div>
+      <div class="hstep-desc">Revisa diseño, textos y colores. Si algo está mal en el <strong>diseño</strong>, cuéntale a Claude qué está mal — él lo corrige. Si es solo un texto, ve al paso 4.</div>
+      <div class="hstep-tip">Correcciones de texto → hazlas tú. Correcciones de diseño → pídele a Claude.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">4</div>
+      <div class="hstep-title">Editar textos con Ctrl+F</div>
+      <div class="hstep-desc">Guarda el archivo HTML. Ábrelo en el Bloc de Notas. Presiona <kbd>Ctrl+F</kbd> (Windows) o <kbd>Cmd+F</kbd> (Mac). Busca la palabra → reemplázala → guarda → vuelve a previsualizar.</div>
+      <div class="hstep-tip">Solo cambia el texto. Nunca borres las partes con &lt; o &gt; — esas controlan el diseño.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">5</div>
+      <div class="hstep-title">Captura slide por slide</div>
+      <div class="hstep-desc">Con todo listo, toma captura de cada slide:<br>• Mac: <kbd>Cmd+Shift+4</kbd><br>• Windows: <kbd>Win+Shift+S</kbd><br>Selecciona el área exacta del slide.</div>
+      <div class="hstep-tip">Captura al 100% de zoom, sin ampliar ni reducir la pantalla.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(93,224,230,0.18);color:var(--blue);">6</div>
+      <div class="hstep-title">Shots.so — fondo techie</div>
+      <div class="hstep-desc">Entra a <strong>shots.so</strong>. Sube la captura. Elige el fondo según el color del programa (tabla abajo). Descarga. Repite por cada slide.</div>
+    </div>
+    <div class="hstep" style="border-color:rgba(155,95,255,0.35);background:rgba(155,95,255,0.08);">
+      <div class="hstep-n" style="background:rgba(155,95,255,0.25);color:var(--purple);">7</div>
+      <div class="hstep-title">Canva + @handle + exportar</div>
+      <div class="hstep-desc">Pega las imágenes en Canva. Añade <strong>@entertechschool</strong>. Exporta como JPG o PNG.</div>
+      <div class="hstep-tip">✳ Recién aquí le pides el siguiente carrusel a Claude — cuando terminaste este proceso completo.</div>
+    </div>
+  </div>
+  <div class="warn" style="margin-top:20px;"><strong>Colores en Shots.so por programa:</strong></div>
+  <table class="ctable">
+    <tr><th>Programa</th><th>Color del fondo</th></tr>
+    <tr><td>Desarrollo Web</td><td><span class="sw" style="background:linear-gradient(135deg,#FF3295,#B40C5D)"></span>#FF3295 → #B40C5D</td></tr>
+    <tr><td>Análisis de Datos</td><td><span class="sw" style="background:linear-gradient(135deg,#5DE0E6,#004AAD)"></span>#5DE0E6 → #004AAD</td></tr>
+    <tr><td>Ciberseguridad</td><td><span class="sw" style="background:linear-gradient(135deg,#05D3AA,#00708A)"></span>#05D3AA → #00708A</td></tr>
+    <tr><td>Soluciones con IA</td><td><span class="sw" style="background:linear-gradient(135deg,#FF914D,#FF3131)"></span>#FF914D → #FF3131</td></tr>
+    <tr><td>Enter general</td><td><span class="sw" style="background:linear-gradient(135deg,#9B5FFF,#6B2FEF)"></span>#9B5FFF → #6B2FEF</td></tr>
+  </table>
+</div>
+
+<!-- ══ REELS ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(255,145,77,0.18);color:var(--orange);">2B</div>
+    <h2>Reels y guiones</h2>
+    <span class="sec-tag" style="background:rgba(255,145,77,0.10);border-color:rgba(255,145,77,0.30);color:var(--orange);">Guión → Grabación → CapCut</span>
+  </div>
+  <div class="gc ao">
+    <p>Claude escribe el guión y los tres copies de plataforma en un solo mensaje. Los guiones se preparan con anticipación para tenerlos listos cuando llegue el momento de grabar.</p>
+  </div>
+  <div class="prompt-wrap">
+    <div class="prompt-hd">
+      <div class="prompt-ey">Prompt — Guión de reel</div>
+      <button class="copy-btn" onclick="copyId('pr')">📋 Copiar prompt</button>
+    </div>
+    <div class="pbox" id="pr"><pre>Crea un guión de reel para Enter Tech School.
+
+Tema / ángulo: <em>[qué quieres comunicar — sé específico]</em>
+Audiencia: <em>[profesionales en activo / emprendedores / estudiantes]</em>
+Duración: <em>[30 / 45 / 60 segundos]</em>
+Formato: <em>[persona a cámara / texto en pantalla / voz en off]</em>
+Gancho (opcional): <em>[situación o frase con la que quieres arrancar]</em>
+
+Entregame:
+1. Guión completo con indicaciones de escena y tono
+2. Copy para Instagram (hook + desarrollo + CTA + hashtags)
+3. Copy para TikTok (versión más corta y directa)
+4. Copy para LinkedIn (tono profesional)</pre>
+    </div>
+  </div>
+  <div class="gc" style="margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="background:rgba(255,145,77,0.08);border:1px solid rgba(255,145,77,0.22);border-radius:12px;padding:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;">Guión</div>
+      <div style="font-size:16px;font-weight:300;color:var(--t2);line-height:1.65;">Línea por línea con tono, pausas e indicaciones de escena.</div>
+    </div>
+    <div style="background:rgba(93,224,230,0.08);border:1px solid rgba(93,224,230,0.22);border-radius:12px;padding:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;">3 copies listos</div>
+      <div style="font-size:16px;font-weight:300;color:var(--t2);line-height:1.65;">Instagram · TikTok · LinkedIn en el mismo mensaje.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FLYERS ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(255,50,149,0.18);color:var(--pink);">2C</div>
+    <h2>Flyers de pauta</h2>
+    <span class="sec-tag" style="background:rgba(255,50,149,0.10);border-color:rgba(255,50,149,0.30);color:var(--pink);">Marketing Asset Hub → foto → exportar</span>
+  </div>
+  <div class="gc" style="margin-bottom:16px;">
+    <p>Los templates están en el <strong style="color:var(--text)">Marketing Asset Hub</strong> en Canva. Si necesitas explorar un concepto nuevo, pídele el boceto a Claude y luego llévalo a Canva.</p>
+    <div style="margin-top:16px;"><a href="https://www.canva.com/design/DAG9fXo99B4/Jf2em9PXHMDLfFmVwy9EXw/edit" target="_blank" class="btn-g" style="display:inline-flex;font-size:13px;">🎨 Abrir Marketing Asset Hub ↗</a></div>
+  </div>
+  <div class="prompt-wrap">
+    <div class="prompt-hd">
+      <div class="prompt-ey">Prompt — Boceto de flyer (para conceptos nuevos)</div>
+      <button class="copy-btn" onclick="copyId('pf')">📋 Copiar prompt</button>
+    </div>
+    <div class="pbox" id="pf"><pre>Crea un boceto de flyer de pauta para Instagram de Enter Tech School.
+
+Programa: <em>[nombre del programa]</em>
+Audiencia: <em>[profesionales / emprendedores / estudiantes]</em>
+Título: <em>[el título del flyer, o escribe "propón tú"]</em>
+4 chips de datos: <em>[ej: "4 semanas · 36 horas · En vivo · Certificado"]</em>
+
+Deja una zona visible para insertar foto de persona real.
+Sistema de diseño Enter con el color del programa.</pre>
+    </div>
+  </div>
+  <div class="scroll-hint">↔ Desliza para ver los pasos</div>
+  <div class="hsteps">
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(255,50,149,0.18);color:var(--pink);">1</div>
+      <div class="hstep-title">Template o boceto nuevo</div>
+      <div class="hstep-desc">Si el flyer encaja con un template del Marketing Asset Hub, úsalo directo en Canva. Si necesitas algo distinto, pídele el boceto a Claude primero.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(255,50,149,0.18);color:var(--pink);">2</div>
+      <div class="hstep-title">Revisar y ajustar copy</div>
+      <div class="hstep-desc">Si usaste Claude para el boceto, igual que con los carruseles: <kbd>Ctrl+F</kbd> para cambiar textos directamente en el HTML.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(255,50,149,0.18);color:var(--pink);">3</div>
+      <div class="hstep-title">Insertar foto en Canva</div>
+      <div class="hstep-desc">Coloca la foto del equipo Enter sobre el placeholder. La foto más oscura funciona mejor con el overlay del diseño.</div>
+    </div>
+    <div class="hstep">
+      <div class="hstep-n" style="background:rgba(255,50,149,0.18);color:var(--pink);">4</div>
+      <div class="hstep-title">@handle y exportar</div>
+      <div class="hstep-desc">Añade <strong>@entertechschool</strong> en la posición correcta. Exporta como JPG o PNG listo para Meta Ads.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COPIES BATCH ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(52,196,124,0.18);color:var(--green);">3</div>
+    <h2>Copies en batch</h2>
+    <span class="sec-tag" style="background:rgba(52,196,124,0.10);border-color:rgba(52,196,124,0.30);color:var(--green);">Al final de cada sesión</span>
+  </div>
+  <div class="note"><strong>Por qué al final y juntos:</strong> Pedir los copies de varias piezas en un mensaje gasta muchos menos tokens que pedirlos uno por uno. Y Claude mantiene mejor el tono cuando los ve todos en contexto.</div>
+  <div class="prompt-wrap">
+    <div class="prompt-hd">
+      <div class="prompt-ey">Prompt — Copies batch</div>
+      <button class="copy-btn" onclick="copyId('pb')">📋 Copiar prompt</button>
+    </div>
+    <div class="pbox" id="pb"><pre>Dame los copies de los últimos <em>[número]</em> carruseles/reels que produjimos.
+
+Para cada pieza:
+- Copy Instagram (hook + desarrollo + CTA + hashtags)
+- Copy TikTok (versión corta y directa)
+- Copy LinkedIn (tono profesional)
+
+Todos terminan con:
+📲 https://wa.link/pa2kwb o al 946 955 590
+🌐 www.enter.edu.pe</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOKENS ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(240,160,32,0.18);color:var(--amber);">⚡</div>
+    <h2>Cuándo editarlo tú vs. pedírselo a Claude</h2>
+  </div>
+  <div class="gc" style="margin-bottom:20px;">
+    <p>Cada mensaje que le mandas a Claude usa tokens (tiene un costo). La regla de oro: <strong style="color:var(--text)">cambios de texto o números → hazlos tú. Cambios de diseño o estructura → pídele a Claude.</strong></p>
+  </div>
+  <div class="tok-grid">
+    <div class="tok-do">
+      <div class="tok-lbl">✓ Edítalo tú (gratis, 30 seg)</div>
+      <ul>
+        <li>Cambiar una palabra o frase</li>
+        <li>Corregir una tilde o tipeo</li>
+        <li>Ajustar tamaño de texto (<kbd>50px</kbd> → <kbd>44px</kbd>)</li>
+        <li>Cambiar un número o dato</li>
+        <li>Modificar el CTA o la URL</li>
+        <li>Cambiar el nombre de una herramienta</li>
+      </ul>
+    </div>
+    <div class="tok-dont">
+      <div class="tok-lbl">✗ Pídele a Claude (úsalo bien)</div>
+      <ul>
+        <li>El diseño está mal (halos, colores, layout)</li>
+        <li>Hay un error de información importante</li>
+        <li>El copy necesita reescritura real</li>
+        <li>Quieres un concepto diferente</li>
+        <li>Necesitas añadir o quitar un slide entero</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip-list">
+    <div class="tip-item">
+      <div class="tip-dot">1</div>
+      <div class="tip-text"><strong>Sé específico desde el primer mensaje</strong> — Cuanto más contexto das, menos correcciones necesitas. Incluye siempre: tema, programa, objetivo, número de slides.</div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-dot">2</div>
+      <div class="tip-text"><strong>Pide variaciones juntas</strong> — "Dame 3 opciones de título" en un prompt, no 3 mensajes separados.</div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-dot">3</div>
+      <div class="tip-text"><strong>Copies siempre al final y en batch</strong> — Al terminar la sesión de producción, pídelos todos de golpe en un solo mensaje.</div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-dot">4</div>
+      <div class="tip-text"><strong>No repitas contexto</strong> — Claude recuerda toda la conversación. No le expliques de nuevo quién es Enter si ya está en el proyecto.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROMPTS REF ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(155,95,255,0.18);color:var(--purple);">★</div>
+    <h2>Todos los prompts de un vistazo</h2>
+  </div>
+  <div class="pref-list">
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--purple);">Grilla mensual</div><div class="pref-text">Pega estrategia + genera todas las ideas del mes</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Necesito la grilla de contenido para [mes] de Enter Tech School.\n\nFormatos: carruseles educativos, reels, flyers de pauta.\nFrecuencia: 4-5 posts semanales. Balance: 70% educativo / 30% conversión.\n\nPara cada pieza: tipo, programa, ángulo, objetivo y fecha sugerida.\nNada genérico. Cada pieza debe sentirse 100% Enter.')">📋 Copiar</button>
+    </div>
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--blue);">Carrusel educativo</div><div class="pref-text">Genera HTML completo con diseño Enter</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Crea un carrusel educativo HTML para Enter Tech School.\n\nTema: [qué vas a enseñar]\nPrograma: [nombre]\nObjetivo: [awareness / educación / conversión]\nSlides: [número]\nÁngulo (opcional): [idea o frase de partida]\n\nEntrégalo como archivo HTML con el sistema de diseño Enter.')">📋 Copiar</button>
+    </div>
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--orange);">Guión de reel</div><div class="pref-text">Guión + copies para IG, TT y LI en un mensaje</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Crea un guión de reel para Enter Tech School.\n\nTema: [qué quieres comunicar]\nAudiencia: [profesionales / emprendedores / estudiantes]\nDuración: [30 / 45 / 60 segundos]\nFormato: [persona a cámara / texto / voz en off]\n\nEntregame:\n1. Guión completo con indicaciones de escena\n2. Copy para Instagram\n3. Copy para TikTok\n4. Copy para LinkedIn')">📋 Copiar</button>
+    </div>
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--pink);">Boceto flyer de pauta</div><div class="pref-text">Para explorar conceptos nuevos antes de Canva</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Boceto de flyer de pauta para Enter Tech School.\n\nPrograma: [nombre]\nAudiencia: [perfil]\nTítulo: [título o escribe: propón tú]\n4 chips de datos: [ej: 4 semanas · 36 horas · En vivo · Certificado]\n\nZona visible para foto de persona real.\nSistema de diseño Enter con el color del programa.')">📋 Copiar</button>
+    </div>
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--green);">Copies batch (al final)</div><div class="pref-text">Todos los copies juntos para IG, TT y LI</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Dame los copies de los últimos [X] carruseles/reels de esta sesión.\n\nPara cada pieza:\n- Copy Instagram (hook + desarrollo + CTA + hashtags)\n- Copy TikTok (versión corta)\n- Copy LinkedIn (tono profesional)\n\nTodos terminan con:\n📲 https://wa.link/pa2kwb o al 946 955 590\n🌐 www.enter.edu.pe')">📋 Copiar</button>
+    </div>
+    <div class="pref">
+      <div><div class="pref-tag" style="color:var(--cyan);">Buyer específico</div><div class="pref-text">3 personajes reales del perfil del programa</div></div>
+      <button class="copy-btn" onclick="copyPrompt('Ármame el buyer específico del programa [nombre] para el perfil de [profesionales / emprendedores / estudiantes].\n\nDame 3 personajes con:\n- Nombre, edad, cargo y empresa\n- Zona de Lima\n- Situación cotidiana concreta\n- Dolor real\n- Freno principal para inscribirse')">📋 Copiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FLUJO ══ -->
+<div class="section" id="seccion-flujo">
+  <div class="sec-head">
+    <div class="sec-num" style="background:rgba(155,95,255,0.18);color:var(--purple);">↓</div>
+    <h2>Flujo completo del mes</h2>
+  </div>
+  <div class="flow-wrap">
+    <div class="flow-phase">
+      <div class="phase-lbl">Fase 1 — Planificación</div>
+      <div class="flow-row">
+        <div class="fnode" style="background:rgba(155,95,255,0.12);border:1px solid rgba(155,95,255,0.25);">
+          <div class="fn-t">Estrategia del mes</div><div class="fn-s">Programas + fechas clave</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--t3);font-size:16px;">→</div>
+        <div class="fnode" style="background:rgba(155,95,255,0.12);border:1px solid rgba(155,95,255,0.25);">
+          <div class="fn-t">Prompt grilla a Claude</div><div class="fn-s">Con estrategia pegada</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--t3);font-size:16px;">→</div>
+        <div class="fnode" style="background:rgba(155,95,255,0.12);border:1px solid rgba(155,95,255,0.25);">
+          <div class="fn-t">Curar + cargar ClickUp</div><div class="fn-s">Calendario del mes listo</div>
+        </div>
+      </div>
+    </div>
+    <div class="farrow">↓</div>
+    <div class="flow-phase">
+      <div class="phase-lbl">Fase 2 — Producción (por tipo de pieza)</div>
+      <div class="flow-cols">
+        <div>
+          <div class="fcol-head" style="background:rgba(93,224,230,0.12);border:1px solid rgba(93,224,230,0.25);">
+            <div class="fch-t" style="color:var(--blue);">🖼️ Carrusel</div>
+          </div>
+          <div class="fstep"><strong>Prompt → Claude entrega HTML</strong></div>
+          <div class="fstep"><strong>Copiar código → HTML Viewer</strong></div>
+          <div class="fstep"><strong>Revisar hasta que esté perfecto</strong></div>
+          <div class="fstep"><strong>Editar textos con Ctrl+F</strong>si hay cambios menores</div>
+          <div class="fstep"><strong>Captura slide por slide</strong></div>
+          <div class="fstep"><strong>Shots.so</strong>fondo del programa</div>
+          <div class="fstep" style="border-color:rgba(155,95,255,0.25);color:#c4a0ff;"><strong>Canva + @handle + exportar</strong>recién aquí pides el siguiente</div>
+        </div>
+        <div>
+          <div class="fcol-head" style="background:rgba(255,145,77,0.12);border:1px solid rgba(255,145,77,0.25);">
+            <div class="fch-t" style="color:var(--orange);">🎬 Reel</div>
+          </div>
+          <div class="fstep"><strong>Prompt → guión + 3 copies</strong>IG · TT · LI en un mensaje</div>
+          <div class="fstep"><strong>Revisar y ajustar guión</strong></div>
+          <div class="fstep"><strong>Grabación cuando corresponda</strong></div>
+          <div class="fstep"><strong>Edición en CapCut</strong></div>
+        </div>
+        <div>
+          <div class="fcol-head" style="background:rgba(255,50,149,0.12);border:1px solid rgba(255,50,149,0.25);">
+            <div class="fch-t" style="color:var(--pink);">📌 Flyer pauta</div>
+          </div>
+          <div class="fstep"><strong>Marketing Asset Hub</strong>templates en Canva</div>
+          <div class="fstep"><strong>Boceto en Claude</strong>si necesitas concepto nuevo</div>
+          <div class="fstep"><strong>Insertar foto real</strong></div>
+          <div class="fstep"><strong>@handle + exportar</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="farrow">↓</div>
+    <div class="flow-phase">
+      <div class="phase-lbl">Fase 3 — Copies</div>
+      <div class="flow-row">
+        <div class="fnode" style="background:rgba(52,196,124,0.12);border:1px solid rgba(52,196,124,0.25);min-width:280px;">
+          <div class="fn-t">Prompt copies batch</div><div class="fn-s">Todos los carruseles/reels → IG + TT + LI</div>
+        </div>
+      </div>
+    </div>
+    <div class="farrow">↓</div>
+    <div class="flow-phase" style="margin-bottom:0">
+      <div class="phase-lbl">Fase 4 — Publicación</div>
+      <div class="flow-row">
+        <div class="fnode" style="background:rgba(5,211,170,0.12);border:1px solid rgba(5,211,170,0.25);">
+          <div class="fn-t">ClickUp</div><div class="fn-s">Pegar copies en calendario</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--t3);font-size:16px;">→</div>
+        <div class="fnode" style="background:rgba(155,95,255,0.12);border:1px solid rgba(155,95,255,0.25);">
+          <div class="fn-t">✳ Mes publicado</div><div class="fn-s">Todo listo y programado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Enter Tech School · <a href="https://enter-recursos.vercel.app/index.html">enter-recursos.vercel.app</a> · ai.tana</p>
+</footer>
+
+</div>
+
+<script>
+function copyId(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  navigator.clipboard.writeText(el.innerText||el.textContent).then(()=>toast('✓ Prompt copiado'));
+}
+function copyPrompt(text){
+  navigator.clipboard.writeText(text).then(()=>toast('✓ Prompt copiado'));
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';},2000);
+}
+</script>
+</body>
+</html>
